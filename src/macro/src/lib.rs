@@ -29,7 +29,7 @@ pub fn init(_attr: TokenStream, item: TokenStream) -> TokenStream {
         stmts.push(
             syn::parse::<syn::Stmt>(
                 quote! {
-                    __registry.put(Box::new(<#ident as regio::Component>::new()));
+                    __registry.put(<#ident>::new());
                 }
                 .into(),
             )

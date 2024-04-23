@@ -2,8 +2,8 @@ mod tests;
 
 extern crate macros;
 
-pub use macros::init;
 pub use macros::component;
+pub use macros::init;
 pub use macros::inject;
 
 use std::{
@@ -41,16 +41,16 @@ impl Registry {
         }
     }
 
-    pub fn put(&mut self, component: Box<dyn Component>) {
-        self.components
-            .insert((*component).as_any().type_id(), component);
+    pub fn put<T: Component + 'static>(&mut self, component: T) {
+        let type_id = TypeId::of::<T>();
+        self.components.insert(type_id, Box::new(component));
     }
 
-    pub fn get<T: Component>(&'static self) -> Option<&'static T> {
+    pub fn get<T: Component>(&'static self) -> Option<&T> {
         let type_id = TypeId::of::<T>();
-        self.components
-            .get(&type_id)
-            .and_then(|c| c.as_any().downcast_ref())
+        self.components.get(&type_id).and_then(|c| {
+            c.as_any().downcast_ref()
+        })
     }
 }
 
@@ -72,7 +72,7 @@ pub fn get<T: Component>() -> &'static T {
     match COMPONENTS.get() {
         Some(r) => match r.get::<T>() {
             Some(c) => c,
-            None => panic!("Unregistered component {}", std::any::type_name::<T>(),),
+            None => panic!("Unregistered component {}", std::any::type_name::<T>()),
         },
         None => panic!("Registry uninitialized"),
     }
