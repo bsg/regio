@@ -4,7 +4,7 @@ extern crate macros;
 
 pub use macros::component;
 pub use macros::init;
-pub use macros::inject;
+pub use macros::using;
 
 use std::{
     any::{Any, TypeId},
@@ -46,11 +46,11 @@ impl Registry {
         self.components.insert(type_id, Box::new(component));
     }
 
-    pub fn get<T: Component>(&'static self) -> Option<&T> {
+    pub fn get<T: Component>(&self) -> Option<&T> {
         let type_id = TypeId::of::<T>();
-        self.components.get(&type_id).and_then(|c| {
-            c.as_any().downcast_ref()
-        })
+        self.components
+            .get(&type_id)
+            .and_then(|c| c.as_any().downcast_ref())
     }
 }
 
@@ -61,7 +61,7 @@ pub fn init(registry: Registry) {
         Ok(_) => {}
         Err(_) => panic!("Failed to initialize registry"),
     }
-    for component in COMPONENTS.get().unwrap().components.values().into_iter() {
+    for component in COMPONENTS.get().unwrap().components.values() {
         component.as_ref().init();
     }
 }

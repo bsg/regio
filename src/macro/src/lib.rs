@@ -12,9 +12,21 @@ lazy_static! {
 
 #[proc_macro_attribute]
 pub fn init(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let mut item_fn = syn::parse::<syn::ItemFn>(item.clone()).expect("Cannot use this macro here");
+    let mut item_fn = match syn::parse::<syn::ItemFn>(item.clone()) {
+        Ok(item_fn) => item_fn,
+        Err(_) => return item,
+    };
 
     let mut stmts: Vec<Stmt> = Vec::new();
+    stmts.push(
+        syn::parse::<syn::Stmt>(
+            quote! {
+                use regio::Component;
+            }
+            .into(),
+        )
+        .unwrap(),
+    );
     stmts.push(
         syn::parse::<syn::Stmt>(
             quote! {
@@ -61,11 +73,15 @@ pub fn component(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 #[proc_macro_attribute]
-pub fn inject(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attrs = attr.into_iter().collect::<Vec<_>>();
-    let var = syn::parse_str::<syn::Ident>(&attrs.get(0).unwrap().to_string()).unwrap();
-    let ty = syn::parse_str::<syn::Ident>(&attrs.get(2).unwrap().to_string()).unwrap();
-    let mut item_fn = syn::parse::<syn::ItemFn>(item.clone()).expect("Cannot use this macro here");
+pub fn using(attr: TokenStream, item: TokenStream) -> TokenStream {
+    let mut item_fn = match syn::parse::<syn::ItemFn>(item.clone()) {
+        Ok(item_fn) => item_fn,
+        Err(_) => return item,
+    };
+    let attrs = attr.clone().into_iter().collect::<Vec<_>>();
+    let ty = syn::parse_str::<syn::Ident>(&attrs.get(0).unwrap().to_string()).unwrap();
+    // TODO attr #1 should be 'as'
+    let var = syn::parse_str::<syn::Ident>(&attrs.get(2).unwrap().to_string()).unwrap();
 
     let mut stmts: Vec<Stmt> = Vec::new();
     stmts.push(

@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::{sync::RwLock, thread::sleep, time::Duration};
+    use std::sync::RwLock;
 
     use crate::{self as regio, Component};
 
@@ -66,7 +66,7 @@ mod tests {
         regio::get::<B>().set_name("B2".to_string());
         assert_eq!(regio::get::<B>().name(), "B2");
 
-        #[regio::inject(a, A)]
+        #[regio::using(A as a)]
         fn inject() {
             assert_eq!(regio::get::<A>().name(), "A");
         }
